@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NetSuite: Token &amp; Integration Log Issue — Tier 3 Assessment</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #e8e8e8; min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 40px 20px; }
+  .shell { background: #f0f0f0; border-radius: 20px; padding: 28px; width: 100%; max-width: 720px; }
+  .bp-title { font-size: 26px; font-weight: 800; color: #1a2340; line-height: 1.2; margin-bottom: 4px; }
+  .bp-subtitle { font-size: 13px; color: #6b7280; margin-bottom: 20px; }
+  .bp-meta-row { display: flex; gap: 10px; margin-bottom: 18px; }
+  .bp-meta-card { background: #fff; border-radius: 14px; border: 1px solid #e5e7eb; padding: 12px 16px; flex: 1; }
+  .bp-meta-eyebrow { font-size: 10px; font-weight: 700; color: #9ca3af; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 5px; }
+  .bp-meta-value { font-size: 15px; font-weight: 700; color: #1a2340; }
+  .bp-meta-pill { display: inline-block; background: #F97316; color: #fff; font-size: 13px; font-weight: 700; padding: 4px 18px; border-radius: 20px; text-decoration: none; }
+  .bp-meta-pill:hover { background: #ea6a05; }
+  .bp-progress-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  .bp-progress-track { display: flex; gap: 5px; }
+  .bp-step { width: 36px; height: 5px; border-radius: 3px; background: #d1d5db; transition: background 0.3s; }
+  .bp-step.done-got { background: #16a34a; }
+  .bp-step.done-partial { background: #F97316; }
+  .bp-step.active { background: #1a2340; }
+  .bp-progress-label { font-size: 12px; color: #6b7280; font-weight: 600; }
+  .bp-qcard { background: #fff; border-radius: 16px; border: 1px solid #e5e7eb; padding: 22px; margin-bottom: 16px; }
+  .bp-qcard-top { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .bp-qnum { width: 34px; height: 34px; border-radius: 50%; background: #F97316; color: #fff; font-size: 14px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .bp-qtopic { font-size: 11px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.07em; background: #f3f4f6; padding: 4px 12px; border-radius: 20px; }
+  .bp-scenario { background: #fff7ed; border-left: 4px solid #F97316; border-radius: 0 10px 10px 0; padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: #92400e; line-height: 1.7; }
+  .bp-scenario strong { color: #7c2d12; font-weight: 700; }
+  .bp-qtext { font-size: 16px; font-weight: 700; color: #1a2340; line-height: 1.5; margin-bottom: 16px; }
+
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option { text-align: left; width: 100%; padding: 14px 16px; border: 1.5px solid #d1d5db; border-radius: 12px; background: #f9fafb; color: #1a2340; font-size: 14px; font-weight: 600; line-height: 1.5; font-family: inherit; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+  .option:hover:not(:disabled) { border-color: #F97316; background: #fff; }
+  .option:disabled { cursor: default; }
+  .option.correct { border-color: #16a34a; background: #f0fdf4; color: #15803d; }
+  .option.wrong { border-color: #dc2626; background: #fef2f2; color: #b91c1c; }
+  .option.dimmed { opacity: 0.45; }
+
+  .feedback { display: none; border-radius: 12px; padding: 14px 16px; margin-top: 16px; font-size: 14px; line-height: 1.6; }
+  .feedback.visible { display: block; }
+  .feedback.right { background: #f0fdf4; border: 1px solid #86efac; }
+  .feedback.wrong { background: #fef2f2; border: 1px solid #fca5a5; }
+  .feedback-tag { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 6px; }
+  .feedback.right .feedback-tag { color: #15803d; }
+  .feedback.wrong .feedback-tag { color: #b91c1c; }
+  .feedback-text { color: #1a2340; }
+
+  .bp-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; }
+  .bp-hint { font-size: 12px; color: #9ca3af; display: flex; align-items: center; gap: 6px; }
+  .bp-btn { padding: 10px 24px; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.2s, transform 0.1s; }
+  .bp-btn:active { transform: scale(0.98); }
+  .bp-btn-submit { background: #F97316; color: #fff; }
+  .bp-btn-submit:hover { background: #ea6a05; }
+  .bp-next { display: none; }
+  .bp-next.visible { display: inline-block; }
+
+  .bp-bottom-row { display: flex; justify-content: space-between; align-items: center; padding: 0 2px; }
+  .bp-btn-restart { padding: 9px 18px; background: transparent; color: #6b7280; border: 1px solid #d1d5db; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .bp-btn-restart:hover { background: #fff; }
+  .bp-remaining { font-size: 12px; color: #9ca3af; font-weight: 500; }
+
+  .complete-screen { display: none; background: #fff; border-radius: 16px; border: 1px solid #e5e7eb; padding: 40px 30px; text-align: center; }
+  .complete-screen.visible { display: block; }
+  .complete-title { font-size: 24px; font-weight: 800; color: #1a2340; margin-bottom: 8px; }
+  .complete-subtitle { font-size: 14px; color: #6b7280; margin-bottom: 28px; line-height: 1.6; }
+  .complete-score { font-size: 44px; font-weight: 800; color: #16a34a; margin-bottom: 4px; }
+  .complete-score-lbl { font-size: 13px; color: #6b7280; font-weight: 600; margin-bottom: 28px; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div id="assessment-view">
+    <div class="bp-title">NetSuite: Token &amp; Integration Log Issue</div>
+    <div class="bp-subtitle">Tier 3 assessment &middot; Ruling out the root cause</div>
+
+    <div class="bp-meta-row">
+      <div class="bp-meta-card">
+        <div class="bp-meta-eyebrow">Topic</div>
+        <div class="bp-meta-value">Token / integration</div>
+      </div>
+      <div class="bp-meta-card">
+        <div class="bp-meta-eyebrow">Questions</div>
+        <div class="bp-meta-value">4 total</div>
+      </div>
+      <div class="bp-meta-card">
+        <div class="bp-meta-eyebrow">Resource</div>
+        <a class="bp-meta-pill" href="https://app.getguru.com/card/iM9EbpET/NetSuite-Action-Troubleshooting" target="_blank">Guru</a>
+      </div>
+    </div>
+
+    <div class="bp-progress-row">
+      <div class="bp-progress-track" id="progress-track"></div>
+      <div class="bp-progress-label" id="progress-label">Question 1 of 4</div>
+    </div>
+
+    <div class="bp-qcard">
+      <div class="bp-qcard-top">
+        <div class="bp-qnum" id="q-num">1</div>
+        <span class="bp-qtopic" id="q-topic"></span>
+      </div>
+      <div class="bp-scenario" id="q-scenario"></div>
+      <div class="bp-qtext" id="q-text"></div>
+
+      <div class="options" id="options"></div>
+
+      <div class="feedback" id="feedback">
+        <div class="feedback-tag" id="feedback-tag"></div>
+        <div class="feedback-text" id="feedback-text"></div>
+      </div>
+
+      <div class="bp-actions">
+        <span class="bp-hint">&#128196; Retool open in another tab for reference</span>
+        <button class="bp-btn bp-btn-submit bp-next" id="next-btn" onclick="nextQuestion()">Next question</button>
+      </div>
+    </div>
+
+    <div class="bp-bottom-row">
+      <button class="bp-btn-restart" onclick="restartAssessment()">Restart</button>
+      <span class="bp-remaining" id="remaining-label">3 questions remaining</span>
+    </div>
+  </div>
+
+  <div class="complete-screen" id="complete-screen">
+    <div class="complete-title">Assessment complete</div>
+    <div class="complete-subtitle">You worked every question through to the right answer.</div>
+    <div class="complete-score" id="complete-score">0 / 4</div>
+    <div class="complete-score-lbl">answered correctly on the first try</div>
+    <button class="bp-btn bp-btn-submit" onclick="restartAssessment()">Start over</button>
+  </div>
+
+</div>
+<script>
+  const questions = [
+    {
+      topic: "Recognize the symptoms",
+      scenario: "A customer writes in: \"Our NetSuite imports started failing yesterday. We removed an employee who left the company. Now the logs show errors about a missing custom list and an internal ID reference. Can Brex refresh or clear the mapping cache on your end?\"",
+      question: "Which detail is the strongest clue to what's actually wrong?",
+      options: [
+        { text: "They removed an employee, and the failures started right after.", correct: true,
+          feedback: "Correct. The timing is the tell: everything broke the moment a user was removed, which points at the login that user was tied to." },
+        { text: "The logs reference a missing custom list and an internal ID.", correct: false,
+          feedback: "That is the loudest line in the ticket, but that kind of log text shows up for several unrelated causes. It doesn't pin down what broke." },
+        { text: "Imports are failing rather than exports.", correct: false,
+          feedback: "That matters for where you confirm the fix later, but on its own it doesn't tell you what caused the failure." },
+        { text: "They're asking Brex to clear a cache.", correct: false,
+          feedback: "That is what the customer wants, not a symptom. It tells you their request, not the cause." }
+      ]
+    },
+    {
+      topic: "Identify the issue",
+      scenario: "You confirm the removed employee was the NetSuite user tied to the integration token. Three known causes could fit these symptoms.",
+      question: "Which one is actually causing the failures?",
+      options: [
+        { text: "A getDeleted failure from a missing \"Deleted Records\" permission.", correct: false,
+          feedback: "getDeleted is read-only and never causes import failures. If imports are genuinely failing, this cannot be the reason." },
+        { text: "An Invalid entity reference key for a subsidiary.", correct: false,
+          feedback: "That error breaks one transaction tied to a single field, not the whole integration. It doesn't match everything failing at once." },
+        { text: "An Invalid login attempt because the token's user was deactivated.", correct: true,
+          feedback: "Correct. The token authenticated as that user, so deactivating them kills the connection and everything stops at once." }
+      ]
+    },
+    {
+      topic: "Provide the fix",
+      scenario: "The customer has specifically asked you to refresh or clear the mapping cache on Brex's end so their imports start working again.",
+      question: "What is the right response?",
+      options: [
+        { text: "Submit a request to clear the mapping cache on Brex's end.", correct: false,
+          feedback: "There is no customer-facing cache-clear action. This promises the customer something that can't happen." },
+        { text: "Explain there's no cache to clear; reconnect with a valid token from an active user, then refresh.", correct: true,
+          feedback: "Correct. Reconnecting with a live token restores the dead connection, and refreshing afterward updates the mappings." },
+        { text: "Refresh the integration first, then escalate if it still fails.", correct: false,
+          feedback: "A refresh assumes a working connection, but this one is dead. Refresh alone has nothing to act on until you reconnect." }
+      ]
+    },
+    {
+      topic: "Confirm in Retool",
+      scenario: "You've walked the customer through reconnecting with a valid token from an active user. Now you want to verify the fix held before closing the ticket.",
+      question: "Where do you confirm the imports are flowing again?",
+      options: [
+        { text: "The Entity Mappings tab, to check the mapped entity's status.", correct: false,
+          feedback: "That confirms a record is active, but it won't show you that imports are actually running again." },
+        { text: "The failed export batch, to read its error message.", correct: false,
+          feedback: "That is the export flow, and the customer reported imports. It confirms the wrong thing." },
+        { text: "Import History on the Integrations Retool page.", correct: true,
+          feedback: "Correct. The symptom was failing imports, so Import History is exactly where you verify they now succeed." }
+      ]
+    }
+  ];
+
+  let current = 0;
+  const firstTry = new Array(questions.length).fill(true);
+  const stepResults = new Array(questions.length).fill(null);
+  let solved = false;
+
+  function buildProgressTrack() {
+    const track = document.getElementById('progress-track');
+    track.innerHTML = '';
+    questions.forEach((_, i) => {
+      const d = document.createElement('div');
+      let cls = 'bp-step';
+      if (stepResults[i]) cls += ' done-' + stepResults[i];
+      else if (i === current) cls += ' active';
+      d.className = cls;
+      track.appendChild(d);
+    });
+  }
+
+  function loadQuestion() {
+    const q = questions[current];
+    solved = false;
+    document.getElementById('q-num').textContent = current + 1;
+    document.getElementById('q-topic').textContent = q.topic;
+    document.getElementById('q-scenario').innerHTML = '<strong>Scenario:</strong> ' + q.scenario;
+    document.getElementById('q-text').textContent = q.question;
+    document.getElementById('progress-label').textContent = 'Question ' + (current + 1) + ' of ' + questions.length;
+    const remaining = questions.length - current - 1;
+    document.getElementById('remaining-label').textContent = remaining + ' question' + (remaining !== 1 ? 's' : '') + ' remaining';
+
+    const box = document.getElementById('options');
+    box.innerHTML = '';
+    q.options.forEach((opt, i) => {
+      const b = document.createElement('button');
+      b.className = 'option';
+      b.textContent = opt.text;
+      b.onclick = () => chooseOption(i);
+      box.appendChild(b);
+    });
+
+    document.getElementById('feedback').className = 'feedback';
+    document.getElementById('next-btn').className = 'bp-btn bp-btn-submit bp-next';
+    buildProgressTrack();
+  }
+
+  function chooseOption(i) {
+    if (solved) return;
+    const q = questions[current];
+    const opt = q.options[i];
+    const buttons = document.querySelectorAll('#options .option');
+    const fb = document.getElementById('feedback');
+
+    if (opt.correct) {
+      solved = true;
+      buttons.forEach((b, j) => {
+        b.disabled = true;
+        if (j === i) b.classList.add('correct');
+        else if (!b.classList.contains('wrong')) b.classList.add('dimmed');
+      });
+      fb.className = 'feedback right visible';
+      document.getElementById('feedback-tag').textContent = 'Got it';
+      document.getElementById('feedback-text').textContent = opt.feedback;
+      stepResults[current] = firstTry[current] ? 'got' : 'partial';
+      document.getElementById('next-btn').className = 'bp-btn bp-btn-submit bp-next visible';
+      document.getElementById('next-btn').textContent = (current === questions.length - 1) ? 'See results' : 'Next question';
+      buildProgressTrack();
+    } else {
+      firstTry[current] = false;
+      buttons[i].classList.add('wrong');
+      buttons[i].disabled = true;
+      fb.className = 'feedback wrong visible';
+      document.getElementById('feedback-tag').textContent = 'Missed it \u2014 try again';
+      document.getElementById('feedback-text').textContent = opt.feedback;
+    }
+  }
+
+  function nextQuestion() {
+    current++;
+    if (current >= questions.length) {
+      showComplete();
+    } else {
+      loadQuestion();
+    }
+  }
+
+  function showComplete() {
+    const gotFirst = stepResults.filter(r => r === 'got').length;
+    document.getElementById('assessment-view').style.display = 'none';
+    document.getElementById('complete-screen').className = 'complete-screen visible';
+    document.getElementById('complete-score').textContent = gotFirst + ' / ' + questions.length;
+  }
+
+  function restartAssessment() {
+    current = 0;
+    firstTry.fill(true);
+    stepResults.fill(null);
+    document.getElementById('assessment-view').style.display = 'block';
+    document.getElementById('complete-screen').className = 'complete-screen';
+    loadQuestion();
+  }
+
+  loadQuestion();
+</script>
+</body>
+</html>
